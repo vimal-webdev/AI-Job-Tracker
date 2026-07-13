@@ -61,18 +61,14 @@ public class AIService {
     }
 
     public AIResumeAnalysisResponse analyzeResume(AIResumeAnalysisRequest request) {
-        String prompt = String.format(
-                "Compare the following Resume with the Job Description.\n\n" +
-                "Resume:\n%s\n\n" +
-                "Job Description:\n%s\n\n" +
+        String prompt = "Compare the following Resume with the Job Description.\n\n" +
+                "Resume:\n" + request.getResumeText() + "\n\n" +
+                "Job Description:\n" + request.getJobDescription() + "\n\n" +
                 "Analyze them and return ONLY a JSON object with three fields:\n" +
                 "1. 'atsScore' (a string representing ATS match score, e.g. '78%')\n" +
                 "2. 'missingSkills' (a JSON array of strings listing skills present in JD but missing in Resume)\n" +
                 "3. 'improvements' (a JSON array of strings listing specific suggestions to improve the resume)\n" +
-                "Do not include any other text or markdown wrappers.",
-                request.getResumeText(),
-                request.getJobDescription()
-        );
+                "Do not include any other text or markdown wrappers.";
 
         String jsonResponse = callAI(prompt);
         try {
