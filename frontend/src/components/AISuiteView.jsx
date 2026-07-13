@@ -9,7 +9,7 @@ export default function AISuiteView({ addToast }) {
   const [errorMsg, setErrorMsg] = useState(null);
 
   // States for Resume Analyzer
-  const [resumeText, setResumeText] = useState('');
+  const [resumeFile, setResumeFile] = useState(null);
   const [resumeJd, setResumeJd] = useState('');
   const [resumeResult, setResumeResult] = useState(null);
 
@@ -35,14 +35,24 @@ export default function AISuiteView({ addToast }) {
     addToast('Copied to clipboard!', 'success');
   };
 
-  const handleAIRequest = async (endpoint, body, onSuccess) => {
+  const handleAIRequest = async (endpoint, body, onSuccess, isMultipart = false) => {
     setLoading(true);
     setErrorMsg(null);
     try {
+      const headers = {};
+      let requestBody;
+
+      if (isMultipart) {
+        requestBody = body; // FormData determines its own boundaries & headers
+      } else {
+        headers['Content-Type'] = 'application/json';
+        requestBody = JSON.stringify(body);
+      }
+
       const response = await fetch(`${API_BASE}/${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        headers,
+        body: requestBody
       });
       
       const data = await response.json();
@@ -60,15 +70,49 @@ export default function AISuiteView({ addToast }) {
     }
   };
 
-  // Trigger Resume Analysis
-  const analyzeResume = () => {
-    if (!resumeText.trim() || !resumeJd.trim()) {
-      addToast('Please enter both your Resume and the Job Description', 'error');
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate size (< 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      addToast('File size must be less than 2MB', 'error');
+      e.target.value = null; // reset input
+      setResumeFile(null);
       return;
     }
-    handleAIRequest('resume-analysis', { resumeText, jobDescription: resumeJd }, (data) => {
+
+    // Validate type
+    const filename = file.name.toLowerCase();
+    if (!filename.endsWith('.pdf') && !filename.endsWith('.doc') && !filename.endsWith('.docx')) {
+      addToast('Only PDF, DOC, and DOCX formats are allowed', 'error');
+      e.target.value = null; // reset input
+      setResumeFile(null);
+      return;
+    }
+
+    setResumeFile(file);
+    addToast('File selected successfully!', 'success');
+  };
+
+  // Trigger Resume Analysis
+  const analyzeResume = () => {
+    if (!resumeFile) {
+      addToast('Please upload your Resume file first', 'error');
+      return;
+    }
+    if (!resumeJd.trim()) {
+      addToast('Please enter the target Job Description', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', resumeFile);
+    formData.append('jobDescription', resumeJd);
+
+    handleAIRequest('resume-analysis', formData, (data) => {
       setResumeResult(data);
-    });
+    }, true);
   };
 
   // Trigger JD Analysis
@@ -154,17 +198,22 @@ export default function AISuiteView({ addToast }) {
           {activeTab === 'resume' && (
             <div style={{ display: 'grid', gridTemplateColumns: resumeResult ? '1fr 1fr' : '1fr', gap: '1.5rem' }}>
               <div className="glass-card">
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>Paste Information</h3>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '1rem' }}>Upload & Match Details</h3>
                 
                 <div className="form-group">
-                  <label>Your Resume / Profile Details</label>
-                  <textarea
+                  <label>Upload Your Resume (PDF, DOC, DOCX - Under 2MB)</label>
+                  <input
+                    type="file"
                     className="form-input"
-                    rows={8}
-                    placeholder="Paste plain text of your resume contents here..."
-                    value={resumeText}
-                    onChange={(e) => setResumeText(e.target.value)}
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                    style={{ padding: '0.5rem 0.75rem', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)' }}
                   />
+                  {resumeFile && (
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-primary)', display: 'block', marginTop: '0.5rem' }}>
+                      Selected: {resumeFile.name} ({(resumeFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group">

@@ -96,6 +96,59 @@ public class AIService {
         }
     }
 
+    public AIResumeAnalysisResponse analyzeResumeFile(org.springframework.web.multipart.MultipartFile file, String jobDescription) {
+        String resumeText = extractTextFromMultipartFile(file);
+        AIResumeAnalysisRequest request = AIResumeAnalysisRequest.builder()
+                .resumeText(resumeText)
+                .jobDescription(jobDescription)
+                .build();
+        return analyzeResume(request);
+    }
+
+    public String extractTextFromMultipartFile(org.springframework.web.multipart.MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Uploaded file is empty");
+        }
+        if (file.getSize() > 2 * 1024 * 1024) {
+            throw new IllegalArgumentException("File size must be less than 2MB");
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null) {
+            throw new IllegalArgumentException("Invalid filename");
+        }
+
+        int lastDotIndex = filename.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            throw new IllegalArgumentException("File must have a valid extension (.pdf, .doc, .docx)");
+        }
+        String extension = filename.substring(lastDotIndex).toLowerCase();
+
+        try {
+            switch (extension) {
+                case ".pdf":
+                    try (org.apache.pdfbox.pdmodel.PDDocument doc = org.apache.pdfbox.Loader.loadPDF(file.getBytes())) {
+                        org.apache.pdfbox.text.PDFTextStripper stripper = new org.apache.pdfbox.text.PDFTextStripper();
+                        return stripper.getText(doc);
+                    }
+                case ".docx":
+                    try (org.apache.poi.xwpf.usermodel.XWPFDocument doc = new org.apache.poi.xwpf.usermodel.XWPFDocument(file.getInputStream())) {
+                        org.apache.poi.xwpf.extractor.XWPFWordExtractor extractor = new org.apache.poi.xwpf.extractor.XWPFWordExtractor(doc);
+                        return extractor.getText();
+                    }
+                case ".doc":
+                    try (org.apache.poi.hwpf.HWPFDocument doc = new org.apache.poi.hwpf.HWPFDocument(file.getInputStream())) {
+                        org.apache.poi.hwpf.extractor.WordExtractor extractor = new org.apache.poi.hwpf.extractor.WordExtractor(doc);
+                        return extractor.getText();
+                    }
+                default:
+                    throw new IllegalArgumentException("Unsupported file type: only PDF, DOC, and DOCX formats are allowed");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract text from file '" + filename + "': " + e.getMessage(), e);
+        }
+    }
+
     public AIJobDescResponse analyzeJobDescription(AIJobDescRequest request) {
         String prompt = String.format(
                 "Analyze the following Job Description:\n%s\n\n" +

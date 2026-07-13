@@ -21,9 +21,11 @@ public class AIController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/resume-analysis")
-    public ResponseEntity<AIResumeAnalysisResponse> analyzeResume(@Valid @RequestBody AIResumeAnalysisRequest request) {
-        AIResumeAnalysisResponse response = aiService.analyzeResume(request);
+    @PostMapping(value = "/resume-analysis", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AIResumeAnalysisResponse> analyzeResume(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam("jobDescription") String jobDescription) {
+        AIResumeAnalysisResponse response = aiService.analyzeResumeFile(file, jobDescription);
         return ResponseEntity.ok(response);
     }
 
