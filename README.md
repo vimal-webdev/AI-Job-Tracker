@@ -56,10 +56,10 @@ Generates a styled Excel sheet using Apache POI containing:
 
 ### AI Integration (`/api/ai/*`)
 Supports both **Google Gemini API** and **OpenAI API** to:
-- **Analyze Resume against Job Description**: Calculates ATS Score, highlights missing skills, and suggests resume improvements.
+- **Analyze Resume against Job Description**: Supports uploading resume documents directly (**PDF, DOC, DOCX up to 2MB**), extracts text, calculates ATS Score, highlights missing skills, and suggests resume improvements.
 - **Analyze Job Description**: Extracts required skills, experience level, responsibilities, and search keywords.
 - **Generate Interview Preparation**: Produces relevant Java, Spring Boot, SQL, HR, and coding questions based on the job role.
-- **Generate Professional Emails**: Automatically creates Cold Emails, Referrals, Follow-ups, Thank You, and Confirmation emails.
+- **Generate Professional Emails**: Automatically creates custom Cold Emails, Referrals, Follow-ups, Thank You, and Confirmation emails using target role, company, recruiter/HR name, and optional custom context details.
 
 ---
 
@@ -193,6 +193,7 @@ POST   /api/ai/interview         - Generate Role-Specific Interview Questions
    ai.provider=gemini
    ai.gemini.api-key=YOUR_GEMINI_API_KEY
    ```
+   *Note: If the key is left as the placeholder `YOUR_GEMINI_API_KEY_HERE` or empty, the application automatically runs in an **Offline Mock Mode**, returning high-quality, dynamically generated mock responses for testing all AI features.*
 ## 💻 Frontend Application
 
 The frontend is a modern, responsive web application built with **React 19** and **Vite**. It features a premium dark-themed **Glassmorphism** styling system built entirely with custom CSS.

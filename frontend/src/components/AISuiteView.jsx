@@ -22,7 +22,8 @@ export default function AISuiteView({ addToast }) {
     templateType: 'Cold Email',
     role: '',
     companyName: '',
-    recruiterName: ''
+    hrName: '',
+    keyDetails: ''
   });
   const [emailResult, setEmailResult] = useState(null);
 
@@ -256,7 +257,7 @@ export default function AISuiteView({ addToast }) {
                   <div>
                     <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Resume Suggestions</h4>
                     <ul style={{ paddingLeft: '1.2rem', fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {resumeResult.suggestions && resumeResult.suggestions.map((s, idx) => (
+                      {resumeResult.improvements && resumeResult.improvements.map((s, idx) => (
                         <li key={idx}>{s}</li>
                       ))}
                     </ul>
@@ -294,13 +295,13 @@ export default function AISuiteView({ addToast }) {
 
                   <div>
                     <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-secondary)', display: 'block' }}>Experience Level Required</span>
-                    <strong style={{ fontSize: '1rem', color: 'var(--color-primary)' }}>{jdResult.experienceLevel || 'Not specified'}</strong>
+                    <strong style={{ fontSize: '1rem', color: 'var(--color-primary)' }}>{jdResult.experience || 'Not specified'}</strong>
                   </div>
 
                   <div>
                     <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Extracted Skill Tags</h4>
                     <div>
-                      {jdResult.skills && jdResult.skills.map((s, idx) => <span key={idx} className="ai-skill-tag" style={{ color: 'var(--color-secondary)' }}>{s}</span>)}
+                      {jdResult.requiredSkills && jdResult.requiredSkills.map((s, idx) => <span key={idx} className="ai-skill-tag" style={{ color: 'var(--color-secondary)' }}>{s}</span>)}
                     </div>
                   </div>
 
@@ -366,13 +367,24 @@ export default function AISuiteView({ addToast }) {
                 </div>
 
                 <div className="form-group">
-                  <label>Recruiter Name (Optional)</label>
+                  <label>Recruiter Name / HR Name (Optional)</label>
                   <input
                     type="text"
                     className="form-input"
                     placeholder="e.g. John Doe"
-                    value={emailForm.recruiterName}
-                    onChange={(e) => setEmailForm({ ...emailForm, recruiterName: e.target.value })}
+                    value={emailForm.hrName}
+                    onChange={(e) => setEmailForm({ ...emailForm, hrName: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Key Details / Context (Optional)</label>
+                  <textarea
+                    className="form-input"
+                    rows={3}
+                    placeholder="e.g. Mention 3 years of React experience, or that I saw their post on LinkedIn"
+                    value={emailForm.keyDetails}
+                    onChange={(e) => setEmailForm({ ...emailForm, keyDetails: e.target.value })}
                   />
                 </div>
 
@@ -443,11 +455,10 @@ export default function AISuiteView({ addToast }) {
                     </div>
                   )}
 
-                  {/* Render Spring Boot Questions */}
-                  {prepResult.springQuestions && prepResult.springQuestions.length > 0 && (
+                  {prepResult.springBootQuestions && prepResult.springBootQuestions.length > 0 && (
                     <div style={{ marginBottom: '1.5rem' }}>
                       <h4 style={{ color: 'var(--color-secondary)', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.25rem', marginBottom: '0.75rem', fontSize: '0.95rem' }}>Spring Boot & REST Questions</h4>
-                      {prepResult.springQuestions.map((q, idx) => (
+                      {prepResult.springBootQuestions.map((q, idx) => (
                         <div key={idx} style={{ marginBottom: '0.75rem', fontSize: '0.85rem' }}>
                           <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Q: {q.question || q}</p>
                           <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>A: {q.answer || 'Review Spring framework details.'}</p>

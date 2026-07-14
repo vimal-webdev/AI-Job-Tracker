@@ -230,10 +230,131 @@ public class AIService {
 
     private String callAI(String prompt) {
         if ("openai".equalsIgnoreCase(provider)) {
+            if (openaiApiKey == null || openaiApiKey.trim().isEmpty() || "YOUR_OPENAI_API_KEY_HERE".equals(openaiApiKey) || openaiApiKey.startsWith("${")) {
+                return getMockAIResponse(prompt);
+            }
             return callOpenAI(prompt);
         } else {
+            if (geminiApiKey == null || geminiApiKey.trim().isEmpty() || "YOUR_GEMINI_API_KEY_HERE".equals(geminiApiKey) || geminiApiKey.startsWith("${")) {
+                return getMockAIResponse(prompt);
+            }
             return callGemini(prompt);
         }
+    }
+
+    private String getMockAIResponse(String prompt) {
+        if (prompt.contains("Compare the following Resume with the Job Description.")) {
+            return "{\n" +
+                    "  \"atsScore\": \"85%\",\n" +
+                    "  \"missingSkills\": [\"Docker\", \"Kubernetes\", \"CI/CD Pipelines\", \"System Design\"],\n" +
+                    "  \"improvements\": [\n" +
+                    "    \"Highlight experience with microservices architecture and deployment tools.\",\n" +
+                    "    \"Quantify achievements in previous roles (e.g., 'improved query performance by 30%').\",\n" +
+                    "    \"Add certification or details regarding cloud platforms (AWS/GCP).\"\n" +
+                    "  ]\n" +
+                    "}";
+        } else if (prompt.contains("Analyze the following Job Description:")) {
+            return "{\n" +
+                    "  \"requiredSkills\": [\"Java\", \"Spring Boot\", \"REST APIs\", \"MySQL\", \"Git\"],\n" +
+                    "  \"experience\": \"3+ years of professional software engineering experience\",\n" +
+                    "  \"responsibilities\": [\n" +
+                    "    \"Design and develop robust backend APIs using Spring Boot.\",\n" +
+                    "    \"Optimize database queries and schema designs in MySQL.\",\n" +
+                    "    \"Collaborate with front-end developers to integrate user-facing elements.\"\n" +
+                    "  ],\n" +
+                    "  \"keywords\": [\"Backend Developer\", \"Java\", \"Spring Boot\", \"MySQL\", \"REST API\", \"Software Engineer\"]\n" +
+                    "}";
+        } else if (prompt.contains("Based on the job role")) {
+            String role = "Software Engineer";
+            try {
+                int start = prompt.indexOf("job role '") + 10;
+                int end = prompt.indexOf("', generate");
+                if (start > 9 && end > start) {
+                    role = prompt.substring(start, end);
+                }
+            } catch (Exception e) {}
+
+            return "{\n" +
+                    "  \"javaQuestions\": [\n" +
+                    "    \"What is the difference between HashMap and ConcurrentHashMap?\",\n" +
+                    "    \"Explain the Java Memory Model and Garbage Collection.\",\n" +
+                    "    \"What are functional interfaces and lambda expressions in Java 8?\",\n" +
+                    "    \"How does exception handling work with try-with-resources?\",\n" +
+                    "    \"What is the difference between fail-fast and fail-safe iterators?\"\n" +
+                    "  ],\n" +
+                    "  \"springBootQuestions\": [\n" +
+                    "    \"What is dependency injection and how does Spring container handle it in a " + role + " context?\",\n" +
+                    "    \"Explain the difference between @Component, @Service, and @Repository annotations.\",\n" +
+                    "    \"How do you secure Spring Boot REST APIs using Spring Security?\",\n" +
+                    "    \"What is the role of @SpringBootApplication annotation?\",\n" +
+                    "    \"How do you handle global exception handling in Spring Boot?\"\n" +
+                    "  ],\n" +
+                    "  \"sqlQuestions\": [\n" +
+                    "    \"Explain database indexing and its impact on performance.\",\n" +
+                    "    \"What is the difference between inner join, left join, and outer join?\",\n" +
+                    "    \"What are transactions and ACID properties in databases?\",\n" +
+                    "    \"How do you prevent SQL injection in queries?\",\n" +
+                    "    \"What is normalization and why is it important?\"\n" +
+                    "  ],\n" +
+                    "  \"hrQuestions\": [\n" +
+                    "    \"Tell me about a challenging technical project you worked on.\",\n" +
+                    "    \"How do you handle conflicts within a team?\",\n" +
+                    "    \"Why are you interested in this role and our company?\",\n" +
+                    "    \"Describe a time you had to learn a new technology quickly.\",\n" +
+                    "    \"Where do you see yourself in the next 5 years?\"\n" +
+                    "  ],\n" +
+                    "  \"codingQuestions\": [\n" +
+                    "    \"Reverse a linked list in-place.\",\n" +
+                    "    \"Find the longest substring without repeating characters.\",\n" +
+                    "    \"Implement a function to check if a binary tree is balanced.\",\n" +
+                    "    \"Merge k sorted linked lists.\",\n" +
+                    "    \"Find the two numbers in an array that sum up to a target value.\"\n" +
+                    "  ]\n" +
+                    "}";
+        } else if (prompt.contains("Generate a professional")) {
+            String template = "Cold Email";
+            String role = "Software Engineer";
+            String company = "Company";
+            String hr = "HR Team";
+            String details = "None";
+
+            try {
+                if (prompt.contains("professional ")) {
+                    int start = prompt.indexOf("professional ") + 13;
+                    int end = prompt.indexOf(" email for the role of");
+                    if (start > 12 && end > start) template = prompt.substring(start, end);
+                }
+                if (prompt.contains("role of '")) {
+                    int start = prompt.indexOf("role of '") + 9;
+                    int end = prompt.indexOf("' at the company '");
+                    if (start > 8 && end > start) role = prompt.substring(start, end);
+                }
+                if (prompt.contains("company '")) {
+                    int start = prompt.indexOf("company '") + 9;
+                    int end = prompt.indexOf("'. HR name is");
+                    if (start > 8 && end > start) company = prompt.substring(start, end);
+                }
+                if (prompt.contains("HR name is '")) {
+                    int start = prompt.indexOf("HR name is '") + 12;
+                    int end = prompt.indexOf("'. Extra details:");
+                    if (start > 11 && end > start) hr = prompt.substring(start, end);
+                }
+                if (prompt.contains("Extra details: '")) {
+                    int start = prompt.indexOf("Extra details: '") + 16;
+                    int end = prompt.indexOf("'. Return ONLY a JSON object");
+                    if (start > 15 && end > start) details = prompt.substring(start, end);
+                }
+            } catch (Exception e) {}
+
+            String subject = String.format("%s - %s Application", template, role);
+            String body = String.format("Dear %s,\n\nI hope this email finds you well.\n\nI am reaching out to express my strong interest in the %s position at %s. With my background in software engineering, I am confident in my ability to add significant value to your team.\n\nDetails of my background: %s\n\nThank you for your time and consideration. I look forward to the possibility of discussing how my skills align with your needs.\n\nBest regards,\n[Your Name]", hr, role, company, details);
+
+            return "{\n" +
+                    "  \"subject\": \"" + subject + "\",\n" +
+                    "  \"body\": \"" + body.replace("\n", "\\n") + "\"\n" +
+                    "}";
+        }
+        return "{}";
     }
 
     private String callGemini(String prompt) {
